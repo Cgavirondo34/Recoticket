@@ -114,6 +114,9 @@ php artisan migrate
 # Compilar assets
 npm run build
 
+# Crear el enlace de almacenamiento público (necesario para imágenes QR)
+php artisan storage:link
+
 # Levantar servidor de desarrollo
 php artisan serve
 ```
@@ -124,6 +127,7 @@ La aplicación estará disponible en: **http://localhost:8000**
 
 ```bash
 composer run setup
+php artisan storage:link
 ```
 
 ---
@@ -134,7 +138,7 @@ Editar el archivo `.env` con los valores correspondientes:
 
 ```dotenv
 # Aplicación
-APP_NAME="RecoTicket"
+APP_NAME=RecoTicket
 APP_ENV=local           # local | production
 APP_KEY=                # se genera con php artisan key:generate
 APP_DEBUG=true          # false en producción
