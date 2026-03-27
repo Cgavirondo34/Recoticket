@@ -43,7 +43,7 @@
                         @endif
                     </td>
                     <td class="px-5 py-3 text-right font-semibold text-indigo-600">
-                        @if($type->price == 0) Gratis @else ${{ number_format($type->price, 0, ',', '.') }} @endif
+                        @if($type->price == 0) Gratis @else ${{ number_format($type->price, 2, ',', '.') }} @endif
                     </td>
                     <td class="px-5 py-3 text-center">{{ $type->quantity }}</td>
                     <td class="px-5 py-3 text-center text-green-600 font-medium">{{ $type->quantity_sold }}</td>
