@@ -18,9 +18,12 @@ class PaymentController extends Controller
         $accessToken = config('services.mercadopago.access_token');
 
         if (!$accessToken) {
-            $this->orderService->approveOrder($order);
-            return redirect()->route('payment.success')->with('order_id', $order->id)
-                ->with('success', 'Pago simulado exitoso (modo demo).');
+            if (app()->environment('local', 'testing')) {
+                $this->orderService->approveOrder($order);
+                return redirect()->route('payment.success')->with('order_id', $order->id)
+                    ->with('success', 'Pago simulado exitoso (modo demo).');
+            }
+            return back()->with('error', 'El sistema de pagos no está configurado. Contactá al administrador.');
         }
 
         $order->load('event', 'orderItems.ticketType');

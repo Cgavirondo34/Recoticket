@@ -34,7 +34,7 @@ class OrderService
             ];
         }
 
-        $fee = round($subtotal * 0.05, 2);
+        $fee = round($subtotal * config('tickets.service_fee', 0.05), 2);
         $total = $subtotal + $fee;
 
         $order = Order::create([

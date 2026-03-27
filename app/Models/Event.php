@@ -10,4 +10,5 @@ class Event extends Model {
     public function ticketTypes() { return $this->hasMany(TicketType::class); }
     public function orders() { return $this->hasMany(Order::class); }
     public function tickets() { return $this->hasMany(Ticket::class); }
+    public function getMinPriceAttribute(): ?float { return $this->ticketTypes->min('price'); }
 }

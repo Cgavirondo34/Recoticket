@@ -53,15 +53,12 @@
                 @if($event->category)
                     <span class="inline-block bg-indigo-100 text-indigo-600 text-xs px-2 py-0.5 rounded-full">{{ $event->category->name }}</span>
                 @endif
-                @php
-                    $minPrice = $event->ticketTypes->min('price');
-                @endphp
-                @if($minPrice !== null)
+                @if($event->minPrice !== null)
                     <div class="mt-3 text-sm font-bold text-gray-700">
-                        @if($minPrice == 0)
+                        @if($event->minPrice == 0)
                             <span class="text-green-600">Gratis</span>
                         @else
-                            Desde ${{ number_format($minPrice, 0, ',', '.') }}
+                            Desde ${{ number_format($event->minPrice, 0, ',', '.') }}
                         @endif
                     </div>
                 @endif
