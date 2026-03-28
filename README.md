@@ -1,6 +1,6 @@
 # 🎫 RecoTicket
 
-**Plataforma SaaS de venta de entradas para eventos** — construida con Laravel 13, Tailwind CSS y SQLite/PostgreSQL.
+**Plataforma SaaS de venta de entradas para eventos** — construida con Laravel 13, Tailwind CSS y Supabase PostgreSQL.
 
 ---
 
@@ -21,7 +21,12 @@
 10. [Escaneo de entradas (QR)](#10-escaneo-de-entradas-qr)
 11. [Estructura del proyecto](#11-estructura-del-proyecto)
 12. [Referencia de rutas](#12-referencia-de-rutas)
-13. [Preguntas frecuentes](#preguntas-frecuentes)
+13. [Despliegue con Supabase](#13-despliegue-con-supabase)
+    - 13.1 [Conectar Supabase desde Laravel](#131-conectar-supabase-desde-laravel)
+    - 13.2 [Shared hosting (Hostinger)](#132-shared-hosting-hostinger)
+    - 13.3 [VPS — migración sin cambiar la base](#133-vps--migración-sin-cambiar-la-base)
+    - 13.4 [Checklist de verificación final](#134-checklist-de-verificación-final)
+14. [Preguntas frecuentes](#preguntas-frecuentes)
 
 ---
 
@@ -47,7 +52,7 @@
 - **PHP** 8.3 o superior
 - **Composer** 2.x
 - **Node.js** 18+ y npm (para assets)
-- **Base de datos**: PostgreSQL 15+ (recomendado para producción) o SQLite (desarrollo)
+- **Base de datos**: [Supabase](https://supabase.com) PostgreSQL (staging/producción) o SQLite (desarrollo local rápido)
 - **Extensiones PHP**: `pdo_pgsql`, `pdo_sqlite`, `gd`, `mbstring`, `xml`, `zip`
 
 ---
@@ -75,28 +80,35 @@ php artisan key:generate
 
 ### Configurar la base de datos
 
-**Opción A — SQLite (desarrollo rápido)**
+**Opción A — Supabase PostgreSQL (recomendado: staging y producción)**
+
+1. Creá un proyecto en [https://supabase.com](https://supabase.com).
+2. Andá a **Project Settings → Database → Connection string → URI** y copiá la URI del **Session Pooler** (puerto 5432).
+3. En tu `.env` configurá:
+
+```dotenv
+DB_CONNECTION=pgsql
+DB_URL=postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres
+DB_SCHEMA=app,public
+DB_SSLMODE=require
+```
+
+Las migraciones crearán automáticamente el schema `app` y todas las tablas dentro de él.
+
+**Opción B — SQLite (desarrollo local rápido, sin servidor de base de datos)**
 
 ```bash
 touch database/database.sqlite
-# En .env asegurarse de que:
-# DB_CONNECTION=sqlite
 ```
 
-**Opción B — PostgreSQL (producción)**
+En `.env` reemplazá el bloque de DB con:
 
-```bash
-# Crear la base de datos en PostgreSQL
-createdb recoticket
-
-# En .env configurar:
-# DB_CONNECTION=pgsql
-# DB_HOST=127.0.0.1
-# DB_PORT=5432
-# DB_DATABASE=recoticket
-# DB_USERNAME=tu_usuario
-# DB_PASSWORD=tu_contraseña
+```dotenv
+DB_CONNECTION=sqlite
+DB_DATABASE=database/database.sqlite
 ```
+
+> Para el setup local con SQLite usá `composer run setup:local` en vez de `composer run setup`.
 
 ### Ejecutar migraciones y seeders
 
@@ -133,7 +145,12 @@ La aplicación estará disponible en: **http://localhost:8000**
 ### ⚡ Inicio rápido (un solo comando)
 
 ```bash
+# Con Supabase (staging/producción — configurar .env primero)
 composer run setup
+php artisan serve
+
+# Con SQLite (desarrollo local rápido)
+composer run setup:local
 php artisan serve
 ```
 
@@ -158,21 +175,20 @@ Editar el archivo `.env` con los valores correspondientes:
 ```dotenv
 # Aplicación
 APP_NAME=RecoTicket
-APP_ENV=local           # local | production
-APP_KEY=                # se genera con php artisan key:generate
-APP_DEBUG=true          # false en producción
-APP_URL=http://localhost:8000
+APP_ENV=production     # local | production
+APP_KEY=               # se genera con php artisan key:generate
+APP_DEBUG=false        # true solo en local
+APP_URL=https://tu-dominio.com
 
-# Base de datos (SQLite para desarrollo)
-DB_CONNECTION=sqlite
+# Base de datos — Supabase PostgreSQL (staging/producción)
+DB_CONNECTION=pgsql
+DB_URL=postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres
+DB_SCHEMA=app,public
+DB_SSLMODE=require
 
-# Base de datos (PostgreSQL para producción)
-# DB_CONNECTION=pgsql
-# DB_HOST=127.0.0.1
-# DB_PORT=5432
-# DB_DATABASE=recoticket
-# DB_USERNAME=postgres
-# DB_PASSWORD=
+# Base de datos — SQLite (desarrollo local, alternativa)
+# DB_CONNECTION=sqlite
+# DB_DATABASE=database/database.sqlite
 
 # Mercado Pago
 MP_PUBLIC_KEY=          # Clave pública de tu cuenta MP
@@ -572,6 +588,210 @@ Recoticket/
 | Método | URL | Descripción |
 |--------|-----|-------------|
 | POST | `/payment/webhook` | Webhook IPN de Mercado Pago |
+
+---
+
+## 13. Despliegue con Supabase
+
+RecoTicket usa Supabase **únicamente como PostgreSQL gestionado**. No se usa Supabase Auth, realtime ni edge functions. Laravel sigue siendo el backend principal con Eloquent, Blade y sesiones propias.
+
+### 13.1 Conectar Supabase desde Laravel
+
+1. **Crear proyecto en Supabase**
+   - Ir a [https://supabase.com](https://supabase.com) → New project.
+   - Elegir región (preferentemente `South America (São Paulo)` para menor latencia).
+
+2. **Obtener la cadena de conexión**
+   - Ir a **Project Settings → Database → Connection string → URI**.
+   - Seleccionar la pestaña **Session Pooler** (puerto 5432). Es la opción correcta para shared hosting y entornos sin soporte a conexiones persistentes.
+   - La URI tiene el formato:
+     ```
+     postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres
+     ```
+
+3. **Configurar `.env`**
+
+   ```dotenv
+   DB_CONNECTION=pgsql
+   DB_URL=postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres
+   DB_SCHEMA=app,public
+   DB_SSLMODE=require
+   ```
+
+4. **Ejecutar migraciones**
+
+   La primera migración crea el schema `app` automáticamente:
+
+   ```bash
+   php artisan migrate --force
+   ```
+
+   Para cargar datos de demo:
+
+   ```bash
+   php artisan migrate --seed --force
+   ```
+
+---
+
+### 13.2 Shared hosting (Hostinger)
+
+Hostinger no permite `php artisan serve` ni acceso SSH fácil para ejecutar comandos. Usá el siguiente flujo:
+
+#### Pasos de despliegue en Hostinger
+
+1. **Subir archivos** via FTP / Git / File Manager al directorio `public_html/recoticket/` (o la carpeta que uses).
+
+2. **Apuntar `public_html` al subdirectorio `public/` de Laravel**
+   - En el File Manager de Hostinger, creá un symlink o usá `.htaccess` para redirigir al directorio `public/`.
+   - Alternativa: subí los archivos de `public/` a `public_html/` y el resto de la app un nivel arriba.
+
+3. **Configurar `.env`** directamente en el servidor con los valores de producción:
+
+   ```dotenv
+   APP_ENV=production
+   APP_DEBUG=false
+   APP_URL=https://tu-dominio.com
+
+   DB_CONNECTION=pgsql
+   DB_URL=postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres
+   DB_SCHEMA=app,public
+   DB_SSLMODE=require
+
+   MP_PUBLIC_KEY=...
+   MP_ACCESS_TOKEN=...
+   MP_WEBHOOK_SECRET=...
+   ```
+
+4. **Ejecutar comandos de despliegue** via SSH (si está disponible) o via el terminal de Hostinger:
+
+   ```bash
+   composer install --no-dev --optimize-autoloader
+   npm install
+   npm run build
+   php artisan key:generate --force
+   php artisan migrate --force
+   php artisan storage:link --force
+   php artisan config:cache
+   php artisan route:cache
+   php artisan view:cache
+   ```
+
+5. **Verificar permisos** de los directorios `storage/` y `bootstrap/cache/`:
+   ```bash
+   chmod -R 775 storage bootstrap/cache
+   ```
+
+#### Notas para Hostinger
+
+- Supabase actúa como base de datos remota: no necesitás instalar PostgreSQL en Hostinger.
+- El Session Pooler de Supabase (puerto 5432) es compatible con shared hosting porque no requiere conexiones persistentes.
+- Si Hostinger no tiene `pdo_pgsql`, activalo desde **hPanel → PHP Configuration → Extensions**.
+
+---
+
+### 13.3 VPS — migración sin cambiar la base
+
+Cuando migrés a un VPS (DigitalOcean, Hetzner, Linode, etc.), **la base de datos no cambia**. Seguís usando el mismo Supabase PostgreSQL.
+
+El cambio es **solo de infraestructura**:
+
+| Antes (Shared hosting) | Después (VPS) |
+|------------------------|---------------|
+| FTP / File Manager | Git pull / CI/CD |
+| hPanel terminal | SSH directo |
+| PHP via FastCGI | PHP-FPM + Nginx/Caddy |
+| Sin supervisor de colas | `supervisor` + `php artisan queue:work` |
+| Sin cron | `crontab` + `php artisan schedule:run` |
+
+El `.env` en el VPS queda **idéntico** al de Hostinger (misma `DB_URL`). Solo cambian variables de infraestructura como `APP_URL`.
+
+**Comandos en el VPS (primer despliegue)**:
+
+```bash
+git clone https://github.com/Cgavirondo34/Recoticket.git /var/www/recoticket
+cd /var/www/recoticket
+cp .env.example .env
+# Editar .env con los valores de producción
+composer install --no-dev --optimize-autoloader
+npm install && npm run build
+php artisan key:generate
+php artisan migrate --force
+php artisan storage:link --force
+php artisan config:cache && php artisan route:cache && php artisan view:cache
+```
+
+**Actualizaciones posteriores** (`git pull` + rebuild):
+
+```bash
+git pull origin main
+composer install --no-dev --optimize-autoloader
+npm run build
+php artisan migrate --force
+php artisan config:cache && php artisan route:cache && php artisan view:cache
+```
+
+---
+
+### 13.4 Checklist de verificación final
+
+Después de cada despliegue, verificá que todo funcione:
+
+#### ✅ Infraestructura
+
+- [ ] `.env` correctamente configurado (`APP_KEY`, `DB_URL`, `MP_*`)
+- [ ] `APP_DEBUG=false` en producción
+- [ ] `storage/` y `bootstrap/cache/` con permisos de escritura
+- [ ] Enlace simbólico `public/storage` → `storage/app/public` creado
+
+#### ✅ Conexión a base de datos
+
+```bash
+php artisan tinker
+>>> DB::select('SELECT current_schema()');
+# Debe devolver: app
+>>> DB::select('SELECT count(*) FROM migrations');
+# Debe devolver el número de migraciones ejecutadas
+```
+
+#### ✅ Migraciones
+
+```bash
+php artisan migrate:status
+# Todas las migraciones deben aparecer como "Ran"
+```
+
+#### ✅ Seeders (solo en staging/demo)
+
+```bash
+php artisan db:seed --force
+# Verificar en Supabase Dashboard → Table Editor que existan categorías, venues y usuarios demo
+```
+
+#### ✅ Login
+
+- [ ] Registrar un usuario nuevo en `/register`
+- [ ] Iniciar sesión en `/login`
+- [ ] Verificar que el dashboard del buyer carga correctamente
+
+#### ✅ Compra de entradas
+
+- [ ] Ir a la página principal `/` y ver eventos publicados
+- [ ] Hacer checkout de un evento
+- [ ] En `APP_ENV=local` el pago se aprueba automáticamente
+- [ ] En producción, completar el flujo con credenciales de sandbox MP
+
+#### ✅ Webhook de Mercado Pago
+
+- [ ] Configurar la URL del webhook en el panel de MP: `https://tu-dominio.com/payment/webhook`
+- [ ] En producción, verificar que el webhook recibe y procesa el evento `payment`
+- [ ] Revisar logs si hay errores: `storage/logs/laravel.log`
+
+#### ✅ Códigos QR
+
+- [ ] Después de una compra aprobada, ir a `/buyer/tickets/{id}`
+- [ ] Verificar que el QR se muestra correctamente
+- [ ] Escanear el QR desde `/organizer/scan` y verificar que devuelve "Válida"
 
 ---
 
