@@ -41,4 +41,17 @@ return [
         'webhook_secret' => env('MP_WEBHOOK_SECRET'),
     ],
 
+    'mercado_pago' => [
+        'public_key'     => env('MP_PUBLIC_KEY'),
+        'access_token'   => env('MP_ACCESS_TOKEN'),
+        'webhook_secret' => env('MP_WEBHOOK_SECRET'),
+    ],
+
+    'whatsapp' => [
+        'provider'   => env('WHATSAPP_PROVIDER', 'stub'), // stub | twilio | meta
+        'api_url'    => env('WHATSAPP_API_URL'),
+        'api_token'  => env('WHATSAPP_API_TOKEN'),
+        'from_number'=> env('WHATSAPP_FROM_NUMBER'),
+    ],
+
 ];
