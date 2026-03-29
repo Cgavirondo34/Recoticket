@@ -60,6 +60,23 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Juan Comprador', 'password' => Hash::make('password'), 'role' => 'buyer']
         );
 
+        // Gym platform users
+        User::firstOrCreate(
+            ['email' => 'trainer@recoticket.com'],
+            ['name' => 'Carlos Entrenador', 'password' => Hash::make('password'), 'role' => 'trainer']
+        );
+        User::firstOrCreate(
+            ['email' => 'reception@recoticket.com'],
+            ['name' => 'María Recepción', 'password' => Hash::make('password'), 'role' => 'reception']
+        );
+        User::firstOrCreate(
+            ['email' => 'partner@recoticket.com'],
+            ['name' => 'Socio Empresarial', 'password' => Hash::make('password'), 'role' => 'partner']
+        );
+
+        // Platform seed data (payment methods, expense categories, notification templates)
+        $this->call(PlatformSeeder::class);
+
         // Events
         $musicCat = Category::where('slug', 'musica')->first();
         $teatroCat = Category::where('slug', 'teatro')->first();
