@@ -84,18 +84,23 @@ class ReservationService
 
         $period = CarbonPeriod::create($start, $end);
 
+        // Pre-fetch all existing reservations for this slot in the date range to avoid N+1 queries
+        $existingDates = FieldReservation::where('field_slot_id', $slot->id)
+            ->whereDate('reservation_date', '>=', $start->toDateString())
+            ->whereDate('reservation_date', '<=', $end->toDateString())
+            ->pluck('reservation_date')
+            ->map(fn($d) => \Carbon\Carbon::parse($d)->toDateString())
+            ->flip()
+            ->all();
+
         foreach ($period as $date) {
             $dayOfWeek = (int) $date->format('N'); // 1=Mon, 7=Sun
             if (! in_array($dayOfWeek, $series->days_of_week ?? [])) {
                 continue;
             }
 
-            // Skip dates that are already booked
-            $alreadyExists = FieldReservation::where('field_slot_id', $slot->id)
-                ->whereDate('reservation_date', $date->toDateString())
-                ->exists();
-
-            if ($alreadyExists) {
+            // Skip dates that are already booked (use pre-fetched set)
+            if (isset($existingDates[$date->toDateString()])) {
                 continue;
             }
 

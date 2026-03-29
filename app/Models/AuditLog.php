@@ -19,11 +19,13 @@ class AuditLog extends Model
         'new_values' => 'array',
     ];
 
-    // Audit logs are immutable — no updates allowed
+    // Audit logs are immutable — throw on update attempt to fail fast
     public static function boot()
     {
         parent::boot();
-        static::updating(fn() => false);
+        static::updating(function () {
+            throw new \LogicException('AuditLog records are immutable and cannot be updated.');
+        });
     }
 
     public function tenant() { return $this->belongsTo(Tenant::class); }

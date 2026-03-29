@@ -34,7 +34,7 @@ Schedule::call(function () {
         if ($member && $member->whatsapp) {
             $notificationService->sendToMember($member, 'payment_due', [
                 'member_name' => $member->full_name,
-                'plan_name' => $membership->plan->name ?? '',
+                'plan_name' => $membership->plan?->name ?? '',
                 'expiry_date' => $membership->end_date->format('d/m/Y'),
             ]);
         }

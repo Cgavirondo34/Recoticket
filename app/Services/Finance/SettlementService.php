@@ -7,7 +7,7 @@ use App\Models\Expense;
 use App\Models\FieldReservation;
 use App\Models\FinancialSettlement;
 use App\Models\GymPayment;
-use App\Models\Tenant;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class SettlementService
@@ -28,8 +28,8 @@ class SettlementService
         }
 
         return DB::transaction(function () use ($tenantId, $year, $month, $existing) {
-            $start = "{$year}-" . str_pad($month, 2, '0', STR_PAD_LEFT) . "-01";
-            $end = date('Y-m-t', strtotime($start)); // last day of month
+            $start = Carbon::create($year, $month, 1)->startOfDay()->toDateString();
+            $end = Carbon::create($year, $month, 1)->endOfMonth()->toDateString();
 
             // Income: confirmed gym payments
             $gymIncome = GymPayment::when($tenantId, fn($q) => $q->where('tenant_id', $tenantId))
