@@ -53,10 +53,7 @@ class ReservationService
         ];
 
         $targetDay = $dayMap[$data['recurrence_day']] ?? $start->dayOfWeek;
-        $current   = $start->copy()->next($targetDay);
-        if ($start->dayOfWeek === $targetDay) {
-            $current = $start->copy();
-        }
+        $current   = $start->copy()->nextOrCurrent($targetDay);
 
         $reservations = [];
         while ($current->lte($end)) {

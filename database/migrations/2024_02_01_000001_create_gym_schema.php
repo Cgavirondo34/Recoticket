@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('email')->nullable();
             $table->string('phone')->nullable();
             $table->string('address')->nullable();
-            $table->string('timezone')->default('America/Argentina/Buenos_Aires');
+            $table->string('timezone')->default(config('app.timezone', 'UTC'));
             $table->string('currency', 10)->default('ARS');
             $table->boolean('active')->default(true);
             $table->json('settings')->nullable();

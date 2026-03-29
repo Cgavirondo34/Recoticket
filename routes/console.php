@@ -12,7 +12,7 @@ Artisan::command('inspire', function () {
 
 // ── Gym scheduled tasks ───────────────────────────────────────────────────
 // Run daily at 8:00 AM to mark expired memberships
-Schedule::job(new CheckExpiredMemberships)->dailyAt('08:00');
+Schedule::job(CheckExpiredMemberships::class)->dailyAt('08:00');
 
 // Run daily at 9:00 AM to send WhatsApp payment reminders
-Schedule::job(new SendPaymentReminders)->dailyAt('09:00');
+Schedule::job(SendPaymentReminders::class)->dailyAt('09:00');

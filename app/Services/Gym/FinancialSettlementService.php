@@ -49,9 +49,17 @@ class FinancialSettlementService
             $gymShare   = $gymIncome   * ($partner->gym_percentage   / 100);
             $fieldShare = $fieldIncome * ($partner->field_percentage / 100);
 
-            // Shared expenses split equally
-            $sharedExp   = $expenses->where('business_unit', 'shared')->sum('amount');
-            $expenseShare = $partners->count() > 0 ? $sharedExp / $partners->count() : 0;
+            // Shared expenses split equally among active partners
+            $partnerCount = $partners->count();
+            $sharedExp    = $expenses->where('business_unit', 'shared')->sum('amount');
+            $expenseShare = $partnerCount > 0 ? $sharedExp / $partnerCount : 0;
+
+            if ($partnerCount === 0) {
+                \Illuminate\Support\Facades\Log::warning(
+                    'FinancialSettlement: no active partners found; shared expenses not allocated.',
+                    ['year' => $year ?? null, 'month' => $month ?? null]
+                );
+            }
 
             return [
                 'partner_id'    => $partner->id,
