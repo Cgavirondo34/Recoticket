@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Buyer;
 use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\Gym;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Organizer;
 use App\Http\Controllers\PaymentController;
@@ -65,3 +66,61 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/events', [Admin\EventController::class, 'index'])->name('events.index');
     Route::post('/events/{event}/publish', [Admin\EventController::class, 'publish'])->name('events.publish');
 });
+
+// ── Gym & Football Field Management ──────────────────────────────────────────
+Route::middleware(['auth', 'role:admin'])->prefix('gym')->name('gym.')->group(function () {
+
+    // Dashboard
+    Route::get('/dashboard', [Gym\DashboardController::class, 'index'])->name('dashboard');
+
+    // Members
+    Route::resource('members', Gym\MemberController::class);
+
+    // Membership Plans
+    Route::resource('plans', Gym\MembershipPlanController::class)->except(['show']);
+
+    // Payments
+    Route::get('/payments', [Gym\GymPaymentController::class, 'index'])->name('payments.index');
+    Route::get('/payments/create', [Gym\GymPaymentController::class, 'create'])->name('payments.create');
+    Route::post('/payments', [Gym\GymPaymentController::class, 'store'])->name('payments.store');
+    Route::get('/payments/{payment}', [Gym\GymPaymentController::class, 'show'])->name('payments.show');
+    Route::get('/payments/{payment}/mercadopago', [Gym\GymPaymentController::class, 'mercadoPagoLink'])->name('payments.mercadopago');
+
+    // Routines
+    Route::resource('routines', Gym\RoutineController::class);
+    Route::post('routines/{routine}/assign', [Gym\RoutineController::class, 'assign'])->name('routines.assign');
+
+    // Reservations (football field)
+    Route::get('/reservations', [Gym\ReservationController::class, 'index'])->name('reservations.index');
+    Route::get('/reservations/create', [Gym\ReservationController::class, 'create'])->name('reservations.create');
+    Route::post('/reservations', [Gym\ReservationController::class, 'store'])->name('reservations.store');
+    Route::get('/reservations/{reservation}', [Gym\ReservationController::class, 'show'])->name('reservations.show');
+    Route::get('/reservations/{reservation}/edit', [Gym\ReservationController::class, 'edit'])->name('reservations.edit');
+    Route::put('/reservations/{reservation}', [Gym\ReservationController::class, 'update'])->name('reservations.update');
+    Route::delete('/reservations/{reservation}', [Gym\ReservationController::class, 'destroy'])->name('reservations.destroy');
+    Route::post('/reservations/{reservation}/payment', [Gym\ReservationController::class, 'registerPayment'])->name('reservations.payment');
+
+    // Expenses
+    Route::resource('expenses', Gym\ExpenseController::class)->except(['show']);
+
+    // Financial Settlement
+    Route::get('/settlement', [Gym\SettlementController::class, 'index'])->name('settlement.index');
+    Route::get('/settlement/{year}/{month}', [Gym\SettlementController::class, 'show'])->name('settlement.show');
+    Route::post('/settlement/generate', [Gym\SettlementController::class, 'generate'])->name('settlement.generate');
+    Route::post('/settlement/{year}/{month}/confirm', [Gym\SettlementController::class, 'confirm'])->name('settlement.confirm');
+
+    // Settings
+    Route::get('/settings', [Gym\SettingsController::class, 'index'])->name('settings.index');
+    Route::post('/settings/plans', [Gym\SettingsController::class, 'storePlan'])->name('settings.plans.store');
+    Route::post('/settings/slots', [Gym\SettingsController::class, 'storeSlot'])->name('settings.slots.store');
+    Route::put('/settings/slots/{slot}', [Gym\SettingsController::class, 'updateSlot'])->name('settings.slots.update');
+    Route::post('/settings/partners', [Gym\SettingsController::class, 'storePartner'])->name('settings.partners.store');
+    Route::put('/settings/partners/{partner}', [Gym\SettingsController::class, 'updatePartner'])->name('settings.partners.update');
+    Route::post('/settings/templates', [Gym\SettingsController::class, 'storeTemplate'])->name('settings.templates.store');
+    Route::put('/settings/templates/{template}', [Gym\SettingsController::class, 'updateTemplate'])->name('settings.templates.update');
+    Route::post('/settings/categories', [Gym\SettingsController::class, 'storeCategory'])->name('settings.categories.store');
+    Route::post('/settings/trainers', [Gym\SettingsController::class, 'storeTrainer'])->name('settings.trainers.store');
+});
+
+// Mercado Pago webhook (no auth required — verified by MP signature)
+Route::post('/gym/payments/webhook', [Gym\GymPaymentController::class, 'webhook'])->name('gym.payments.webhook');

@@ -197,6 +197,7 @@
                 @auth
                     @if(auth()->user()->isAdmin())
                         <a href="{{ route('admin.dashboard') }}" class="nav-link">Admin</a>
+                        <a href="{{ route('gym.dashboard') }}" class="nav-link">🏋️ Gym</a>
                     @elseif(auth()->user()->isOrganizer())
                         <a href="{{ route('organizer.dashboard') }}" class="nav-link">Mi Panel</a>
                         <a href="{{ route('organizer.scan') }}" class="nav-link">Escanear QR</a>

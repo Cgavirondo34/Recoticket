@@ -124,19 +124,7 @@ class DatabaseSeeder extends Seeder
             ],
         ];
 
-        foreach ($events as $eventData) {
-            $ticketTypes = $eventData['ticket_types'];
-            unset($eventData['ticket_types']);
-
-            $event = Event::firstOrCreate(['slug' => $eventData['slug']], $eventData);
-
-            if ($event->wasRecentlyCreated) {
-                foreach ($ticketTypes as $tt) {
-                    $tt['event_id'] = $event->id;
-                    $tt['quantity_sold'] = 0;
-                    TicketType::create($tt);
-                }
-            }
-        }
+        // Gym base data
+        $this->call(GymSeeder::class);
     }
 }

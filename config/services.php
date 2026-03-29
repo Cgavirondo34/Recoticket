@@ -39,6 +39,16 @@ return [
         'public_key'     => env('MP_PUBLIC_KEY'),
         'access_token'   => env('MP_ACCESS_TOKEN'),
         'webhook_secret' => env('MP_WEBHOOK_SECRET'),
+        'currency'       => env('MP_CURRENCY', 'ARS'),
+        'success_url'    => env('MP_SUCCESS_URL'),
+        'failure_url'    => env('MP_FAILURE_URL'),
+        'pending_url'    => env('MP_PENDING_URL'),
+    ],
+
+    'whatsapp' => [
+        'api_url'   => env('WHATSAPP_API_URL'),
+        'api_token' => env('WHATSAPP_API_TOKEN'),
+        'from'      => env('WHATSAPP_FROM'),
     ],
 
 ];
