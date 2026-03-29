@@ -599,7 +599,7 @@
             <h1 class="anim-up-1 font-extrabold leading-[1.08] tracking-tight mb-6"
                 style="font-size: clamp(2.6rem, 7vw, 5.2rem);">
                 Viví la experiencia<br>
-                <span class="text-gradient">que te merece&acute;s</span>
+                <span class="text-gradient">que te mereces</span>
             </h1>
 
             {{-- Subtitle --}}
